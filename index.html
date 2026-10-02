@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ScreenLamp</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    background: #fff4e0;
+  }
+  #light {
+    position: fixed;
+    inset: 0;
+    background: rgb(255,244,224);
+    transition: background 0.2s ease;
+  }
+  #panel {
+    position: fixed;
+    left: 50%;
+    bottom: 24px;
+    transform: translateX(-50%);
+    width: min(560px, calc(100vw - 32px));
+    padding: 18px 22px;
+    border-radius: 18px;
+    background: rgba(20,20,25,.82);
+    color: white;
+    backdrop-filter: blur(14px);
+    box-shadow: 0 12px 40px rgba(0,0,0,.25);
+    opacity: .16;
+    transition: opacity .2s ease;
+  }
+  #panel:hover { opacity: 1; }
+  .row { display:flex; align-items:center; gap:12px; margin:9px 0; }
+  label { width:95px; font-size:14px; }
+  input[type="range"] { flex:1; accent-color:#f6c66d; }
+  select {
+    flex:1; padding:8px 10px; border-radius:9px;
+    border:1px solid #555; background:#29292f; color:white;
+  }
+  button {
+    width:100%; margin-top:10px; padding:10px;
+    border:0; border-radius:10px; cursor:pointer;
+    background:#f6c66d; color:#222; font-weight:700;
+  }
+  .tips {
+    margin-top: 13px;
+    padding: 10px 11px;
+    border-radius: 11px;
+    background: rgba(255,255,255,.07);
+  }
+  .tips-title {
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 7px;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
+  }
+  th, td {
+    padding: 5px 4px;
+    text-align: left;
+    border-bottom: 1px solid rgba(255,255,255,.08);
+  }
+  th { opacity: .65; font-weight: 500; }
+  tr:last-child td { border-bottom: 0; }
+  .room-note {
+    margin-top: 8px;
+    font-size: 10px;
+    line-height: 1.5;
+    opacity: .68;
+  }
+  .cun{
+    text-align:center; font-size:14px; opacity:.65; margin-top:9px
+  }
+  .hint { text-align:center; font-size:12px; opacity:.65; margin-top:9px; }
+  #value { width:42px; text-align:right; font-size:13px; }
+</style>
+</head>
+<body>
+<div id="light"></div>
+
+<div id="panel">
+  <div class="row">
+    <label>Màu ánh sáng</label>
+    <select id="preset">
+      <option value="255,244,224">Trắng ấm — 3500K</option>
+      <option value="255,236,200">Vàng ấm — 3000K</option>
+      <option value="255,250,240">Trắng tự nhiên — 4000K</option>
+      <option value="255,255,255">Trắng sáng — 6500K</option>
+    </select>
+  </div>
+
+  <div class="row">
+    <label>Độ sáng</label>
+    <input id="brightness" type="range" min="5" max="100" value="28">
+    <span id="value">28%</span>
+  </div>
+
+  <div class="tips">
+    <div class="tips-title">Khuyên dùng theo loại màn hình</div>
+    <table>
+      <tr><th>Loại màn</th><th>Brightness</th><th>Thiết lập gợi ý</th></tr>
+      <tr><td>IPS</td><td>20–35%</td><td>3500–4000K</td></tr>
+      <tr><td>VA</td><td>20–35%</td><td>3000–4000K</td></tr>
+      <tr><td>TN</td><td>25–40%</td><td>3500–4000K</td></tr>
+      <tr><td>OLED</td><td>10–25%</td><td>3000–3500K</td></tr>
+      <tr><td>Mini-LED</td><td>10–25%</td><td>3000–4000K</td></tr>
+    </table>
+    <div class="room-note">
+      <b>Phòng tối:</b> 10–25% &nbsp; · &nbsp;
+      <b>Phòng vừa:</b> 20–35% &nbsp; · &nbsp;
+      <b>Phòng sáng:</b> 30–50%
+    </div>
+  </div>
+
+  <button id="fullscreen">Bật toàn màn hình (F11)</button>
+  <div class="hint">Di chuột xuống cạnh dưới để hiện bảng điều khiển · ESC để thoát fullscreen</div>
+  <div class="cun">Go live by: <a href="https://mynameiscun.github.io/Portfolio/" target="_blank" style="color: #dffcb3; text-decoration: underline;">Tolacun</a></div>
+</div>
+
+<script>
+const light = document.getElementById("light");
+const preset = document.getElementById("preset");
+const brightness = document.getElementById("brightness");
+const value = document.getElementById("value");
+const panel = document.getElementById("panel");
+const fullscreen = document.getElementById("fullscreen");
+
+function apply() {
+  const [r,g,b] = preset.value.split(",").map(Number);
+  const k = Number(brightness.value) / 100;
+  light.style.background = `rgb(${Math.round(r*k)}, ${Math.round(g*k)}, ${Math.round(b*k)})`;
+  value.textContent = brightness.value + "%";
+}
+
+preset.addEventListener("change", apply);
+brightness.addEventListener("input", apply);
+
+fullscreen.addEventListener("click", async () => {
+  try {
+    if (!document.fullscreenElement) await document.documentElement.requestFullscreen();
+  } catch(e) {}
+});
+
+document.addEventListener("keydown", e => {
+  if (e.key.toLowerCase() === "h") {
+    panel.style.display = panel.style.display === "none" ? "block" : "none";
+  }
+  if (e.key === "ArrowUp") {
+    brightness.value = Math.min(100, Number(brightness.value) + 5);
+    apply();
+  }
+  if (e.key === "ArrowDown") {
+    brightness.value = Math.max(5, Number(brightness.value) - 5);
+    apply();
+  }
+});
+
+apply();
+</script>
+</body>
+</html>
